@@ -1,0 +1,37 @@
+{
+  "name": "waming/yaf_swoole",
+  "type": "project",
+  "keywords": [
+    "php",
+    "swoole",
+    "yaf"
+  ],
+  "description": "yaf swoole plugin",
+  "license": "MIT License",
+  "require": {
+    "php": ">=8.0"
+  },
+  "require-dev": {
+    "swoole/ide-helper": "^4.5"
+  },
+  "suggest": {
+    "ext-openssl": "Required to use HTTPS.",
+    "ext-json": "Required to use JSON.",
+    "ext-pdo": "Required to use MySQL Client.",
+    "ext-pdo_mysql": "Required to use MySQL Client.",
+    "ext-redis": "Required to use Redis Client."
+  },
+  "autoload": {
+    "psr-4": {},
+    "files": [
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {}
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "extra": {}
+}
