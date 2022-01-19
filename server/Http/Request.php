@@ -4,11 +4,12 @@
  */
 namespace Server\Http;
 
+use Exception;
 use JetBrains\PhpStorm\Pure;
 use Swoole\Http\Request as SwooleRequest;
-use Yaf_Request_Abstract;
+use Yaf_Request_Http;
 
-class Request extends Yaf_Request_Abstract
+class Request extends Yaf_Request_Http
 {
     private SwooleRequest $swooleRequest;
 
@@ -22,6 +23,11 @@ class Request extends Yaf_Request_Abstract
         $this->server = $request->server;
         $this->myuri = $this->server['request_uri'];
         $this->setRequestUri($this->myuri);
+    }
+
+    public function getServers(): array
+    {
+        return $this->server;
     }
 
     public function clearParams(): object
@@ -49,9 +55,9 @@ class Request extends Yaf_Request_Abstract
         return $this->server[$name] ?? $default;
     }
 
-    #[Pure] public function getException() : \Exception
+    #[Pure] public function getException() : Exception
     {
-        return new \Exception();
+        return new Exception();
     }
 
     public function getLanguage(): string
@@ -71,18 +77,28 @@ class Request extends Yaf_Request_Abstract
 
     public function getParam($name = "", $default = "") : mixed
     {
-        return $this->swooleRequest->get($name) ?? $default;
+        return $this->swooleRequest->get[$name] ?? $default;
     }
 
     public function getParams(): array
     {
-        return $this->swooleRequest->get() ?? [];
+        return $this->swooleRequest->get ?? [];
     }
 
     public function setRequestUri($uri) : object
     {
         parent::setRequestUri($uri);
         return $this;
+    }
+
+    public function getPosts() : array
+    {
+        return $this->swooleRequest->post ?? [];
+    }
+
+    public function getPost($name = "", $default = "") : mixed
+    {
+        return $this->swooleRequest->post[$name] ?? $default;
     }
 
     public function getRequestUri() : string

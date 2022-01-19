@@ -25,6 +25,7 @@ use Yaf_Request_Abstract;
 use Yaf_Response_Abstract;
 use Yaf_Response_Http;
 use Server\Http\Request as CoRequest;
+use Server\Http\Response as CoResponse;
 
 class HttpServer
 {
@@ -115,16 +116,16 @@ class HttpServer
     public function registerRequest(Request $request, Response $response)
     {
         $myrequest = new CoRequest($request);
-        $yafresponse = new Yaf_Response_Http();
+        $coResponse = new CoResponse();
 
         //保存request,response 到协程上下文
         Context::set(Yaf_Request_Abstract::class, $myrequest);
-        Context::set(Yaf_Response_Abstract::class, $yafresponse);
+        Context::set(Yaf_Response_Abstract::class, $coResponse);
 
         /**
          * 配置自定义request
          */
         $this->yafApplication->getDispatcher()->dispatch($myrequest);
-        $response->end($yafresponse->getBody());
+        $coResponse->emit($response);
     }
 }
