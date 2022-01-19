@@ -6,7 +6,7 @@ use Swoole\Constant;
 
 return [
     'mode' => SWOOLE_PROCESS,
-    'name' => 'http',
+    'name' => 'Http',
     'host' => '0.0.0.0',
     'port' => 9501,
     'sock_type' => SWOOLE_SOCK_TCP,

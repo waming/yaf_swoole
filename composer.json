@@ -22,7 +22,9 @@
     "ext-redis": "Required to use Redis Client."
   },
   "autoload": {
-    "psr-4": {},
+    "psr-4": {
+      "Server\\": "server/"
+    },
     "files": [
     ]
   },
