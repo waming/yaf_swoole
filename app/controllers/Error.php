@@ -19,17 +19,13 @@ class ErrorController extends Yaf_Controller_Abstract
      */
     public function errorAction()
     {
-        $exception = $this->getRequest()->getException();
-        $message = $exception->getMessage();
-//        // 判断是否为ajax访问
-//        if ($this->_req->isXmlHttpRequest()) {
-//            // 返回错误
-//            $this->errorReturn(false, $message);
-//        }
-        // 返回错误页面
+        /** @var \Server\Http\Request $request */
+        $request = \Server\Utils\Context::get(Yaf_Request_Abstract::class);
 
-//        var_dump($exception, $message);
-//        return $this->ajaxReturn(false, $message);
+        $exception = $request->getException();
+        $message = $request->getRequestUri();
+
+        $this->ajaxReturn(false, $message);
     }
 
     /**
@@ -54,7 +50,10 @@ class ErrorController extends Yaf_Controller_Abstract
             empty($param) || $data['param'] = $param;
             empty($url) || $data['url'] = $url;
         }
-        header("Content-type: application/json;charset=$encoding");
-        die(json_encode($data, JSON_UNESCAPED_UNICODE));
+
+        /** @var \Server\Http\Response $response */
+        $response = \Server\Utils\Context::get(Yaf_Response_Abstract::class);
+        $response->setHeader("Content-type", "application/json;charset=$encoding");
+        $response->setBody(json_encode($data, JSON_UNESCAPED_UNICODE));
     }
 }

@@ -29,6 +29,8 @@ composer install
 curl http://localhost:9501/test
 ```
 
+more test code,  view [Test.php](https://github.com/waming/yaf_swoole/blob/main/app/controllers/Test.php)
+
 # node
 
 It is only suitable for learning and cannot be used in production environment.

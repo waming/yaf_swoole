@@ -14,6 +14,7 @@ use Swoole\Server as SwooleServer;;
 use Swoole\Http\Server as SwooleHttpServer;
 use Swoole\Coroutine;
 use Yaf_Application;
+use Yaf_Exception;
 use Yaf_Exception_DispatchFailed;
 use Yaf_Exception_LoadFailed;
 use Yaf_Exception_LoadFailed_Action;
@@ -23,7 +24,6 @@ use Yaf_Exception_StartupError;
 use Yaf_Exception_TypeError;
 use Yaf_Request_Abstract;
 use Yaf_Response_Abstract;
-use Yaf_Response_Http;
 use Server\Http\Request as CoRequest;
 use Server\Http\Response as CoResponse;
 
@@ -35,10 +35,7 @@ class HttpServer
 
     private ?Yaf_Application $yafApplication = null;
 
-    protected static array $nonCoContext = [];
-
     /**
-     * 初始化
      * HttpServer constructor.
      * @param array $config
      */
@@ -49,7 +46,7 @@ class HttpServer
     }
 
     /**
-     * 初始化server方法
+     * init server
      */
     public function initServer()
     {
@@ -64,7 +61,7 @@ class HttpServer
 
     public function start()
     {
-        Coroutine::set(['hook_flags' => SWOOLE_HOOK_FLAGS]); //一键协程化
+        Coroutine::set(['hook_flags' => SWOOLE_HOOK_FLAGS]);
         $this->server->start();
     }
 
@@ -89,10 +86,13 @@ class HttpServer
         echo "workerStart event! \r\n";
 
         if (! $this->yafApplication instanceof Yaf_Application) {
-            //创建yaf对象
+            //Yaf object
             try {
-                $this->yafApplication = new Yaf_Application(APP_PATH . '/config/app.ini', 'develop');
+                $this->yafApplication = new Yaf_Application(APP_PATH . '/config/app.ini', 'product');
                 $this->yafApplication->bootstrap();
+                $this->yafApplication->getDispatcher()
+                                    ->autoRender(false)  //close render
+                                    ->setErrorHandler([$this, "errorHander"], E_ALL); //set error handler
             } catch (Yaf_Exception_StartupError | Yaf_Exception_TypeError $e) {
                 throw new RuntimeException($e->getMessage(), $e->getCode());
             }
@@ -106,26 +106,44 @@ class HttpServer
     }
 
     /**
-     * @throws Yaf_Exception_TypeError
-     * @throws Yaf_Exception_DispatchFailed
-     * @throws Yaf_Exception_LoadFailed_Controller
-     * @throws Yaf_Exception_RouterFailed
-     * @throws Yaf_Exception_LoadFailed
-     * @throws Yaf_Exception_LoadFailed_Action
+     * @throws \Yaf_Exception_TypeError
+     * @throws \Yaf_Exception_DispatchFailed
+     * @throws \Yaf_Exception_LoadFailed_Controller
+     * @throws \Yaf_Exception_RouterFailed
+     * @throws \Yaf_Exception_LoadFailed
+     * @throws \Yaf_Exception_LoadFailed_Action
      */
     public function registerRequest(Request $request, Response $response)
     {
-        $myrequest = new CoRequest($request);
-        $coResponse = new CoResponse();
+        if ($request->server['path_info'] == '/favicon.ico' || $request->server['request_uri'] == '/favicon.ico') {
+            $response->end();
+            return;
+        }
 
-        //保存request,response 到协程上下文
+        $myrequest = new CoRequest($request);
+        $coResponse = new CoResponse($response);
+
+        //save request to Coroutine
         Context::set(Yaf_Request_Abstract::class, $myrequest);
         Context::set(Yaf_Response_Abstract::class, $coResponse);
 
         /**
-         * 配置自定义request
+         * set Yaf request
          */
         $this->yafApplication->getDispatcher()->dispatch($myrequest);
-        $coResponse->emit($response);
+        $coResponse->emit();
+    }
+
+    /**
+     * @doc https://www.laruence.com/manual/yaf.class.dispatcher.setErrorHandler.html
+     * Yaf error hander
+     * You can use LogHandler. return use JSON or XML
+     */
+    public function errorHander($errno, $errstr, $errfile, $errline)
+    {
+        /** @var \Server\Http\Response $coResponse */
+        $coResponse = Context::get(Yaf_Response_Abstract::class);
+        $coResponse->setStatusCode($errno);
+        $coResponse->setBody($errstr);
     }
 }

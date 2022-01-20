@@ -19,6 +19,7 @@ class Request extends Yaf_Request_Http
 
     public function __construct(SwooleRequest $request)
     {
+        parent::__construct();
         $this->swooleRequest = $request;
         $this->server = $request->server;
         $this->myuri = $this->server['request_uri'];
