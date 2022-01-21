@@ -50,8 +50,6 @@ class HttpServer
      */
     public function initServer()
     {
-        $this->writePid();
-
         if (! $this->server instanceof SwooleServer) {
             $this->server = new SwooleHttpServer($this->config['host'], $this->config['port'], $this->config['mode'], $this->config['sock_type']);
             $this->server->set($this->config['settings']);
@@ -81,9 +79,13 @@ class HttpServer
          echo "start event! \r\n";
     }
 
-    public function registerWorkerStart()
+    public function registerWorkerStart(SwooleServer $server, int $workerId)
     {
-        echo "workerStart event! \r\n";
+        if ($server->taskworker) {
+            echo "TaskWorker{$workerId} started. \r\n";
+        } else {
+            echo "Worker{$workerId} started. \r\n";
+        }
 
         if (! $this->yafApplication instanceof Yaf_Application) {
             //Yaf object
@@ -97,12 +99,6 @@ class HttpServer
                 throw new RuntimeException($e->getMessage(), $e->getCode());
             }
         }
-    }
-
-    private function writePid()
-    {
-        $file = $this->config['settings']['pid_file'];
-        file_put_contents($file, getmypid());
     }
 
     /**
